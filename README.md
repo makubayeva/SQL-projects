@@ -1,4 +1,4 @@
-# SQL-projects
+# Customers and Products Analysis
 
 Data analysis has proven to be very effective in sales. This is because we can extract key performance indicators (KPIs) to make smarter decisions. This saves time, resources, and money.
 
