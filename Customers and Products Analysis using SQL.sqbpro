@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?><sqlb_project><db path="C:/Users/I504728/Downloads/stores.db" readonly="0" foreign_keys="1" case_sensitive_like="0" temp_store="0" wal_autocheckpoint="1000" synchronous="2"/><attached/><window><main_tabs open="structure browser pragmas query" current="3"/></window><tab_structure><column_width id="0" width="300"/><column_width id="1" width="0"/><column_width id="2" width="125"/><column_width id="3" width="4975"/><column_width id="4" width="0"/><expanded_item id="0" parent="1"/><expanded_item id="1" parent="1"/><expanded_item id="2" parent="1"/><expanded_item id="3" parent="1"/></tab_structure><tab_browse><current_table name="4,9:maincustomers"/><default_encoding codec=""/><browse_table_settings><table schema="main" name="customers" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort/><column_widths><column index="1" value="120"/><column index="2" value="203"/><column index="3" value="123"/><column index="4" value="123"/><column index="5" value="119"/><column index="6" value="189"/><column index="7" value="145"/><column index="8" value="113"/><column index="9" value="79"/><column index="10" value="82"/><column index="11" value="81"/><column index="12" value="178"/><column index="13" value="78"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="orderdetails" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort><column index="2" mode="0"/></sort><column_widths><column index="1" value="124"/><column index="2" value="120"/><column index="3" value="151"/><column index="4" value="92"/><column index="5" value="160"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="payments" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort/><column_widths><column index="1" value="158"/><column index="2" value="127"/><column index="4" value="84"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="products" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort/><column_widths><column index="1" value="120"/><column index="2" value="300"/><column index="3" value="137"/><column index="4" value="122"/><column index="5" value="200"/><column index="6" value="300"/><column index="7" value="149"/><column index="8" value="84"/><column index="9" value="59"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table></browse_table_settings></tab_browse><tab_sql><sql name="project.sql">SELECT *
+  FROM customers
+ LIMIT 3; --This table includes information on customers, including customer number, customer name, last name and first name of the customer, their phone number, address, city, state, postal code, country, the sales rep number and their credit limit.
+  
+SELECT *
+  FROM employees
+ LIMIT 3; -- This table includes information on employees, includiing employee number, their last and first name, extension, e-mail, their office code, who they report to and their job title.
+
+SELECT *
+  FROM offices
+ LIMIT 3; -- This table includes information on offices, including the office code, the city where it is located, office phone number, address, state, country, postal code and territory.
+ 
+SELECT *
+  FROM orderdetails
+ LIMIT 3; -- This table includes information on order details, including the order number, product code, quantity ordered and price for each product, and order line number (which describes different parts of one order)
+
+SELECT *
+  FROM orders
+ LIMIT 3; -- This table includes information on orders, including order number, order date, required date, shipped date, status (shipped, on hold, disputed), comments, and customer number.
+
+SELECT *
+  FROM payments
+ LIMIT 3; -- This table includes information on payments, including customer number, check number, payment date and the amount paid.
+ 
+SELECT *
+  FROM productlines
+ LIMIT 3; -- This table includes information on product lines, including the product line name, text description on the line, html description (empty), and image (empty)
+ 
+SELECT *
+  FROM products
+ LIMIT 3; -- This table includes information on the products, including product code, product name, product line, product scale (1:X), product vendor, product description, quantity in stock, buy price, and MSRP (manufacturer's suggested retail price)
+ </sql><sql name="Summary Table">SELECT 'Customers' AS table_name, 13 AS number_of_attributes, COUNT(*) AS number_of_rows
+  FROM customers
+  
+ UNION ALL
+ 
+SELECT 'Products' AS table_name, 9 AS number_of_attributes, COUNT(*) AS number_of_rows
+  FROM products
+  
+ UNION ALL
+ 
+SELECT 'ProductLines' AS table_name, 4 AS number_of_attributes, COUNT(*) AS number_of_rows
+  FROM productlines
+  
+ UNION ALL
+  
+SELECT 'Orders' AS table_name, 7 AS number_of_attributes, COUNT(*) AS number_of_rows
+  FROM orders
+  
+ UNION ALL
+ 
+SELECT 'OrderDetails' AS table_name, 5 AS number_of_attributes, COUNT(*) AS number_of_rows
+  FROM orderdetails
+  
+ UNION ALL
+ 
+SELECT 'Payments' AS table_name, 4 AS number_of_attributes, COUNT(*) AS number_of_rows
+  FROM payments
+  
+ UNION ALL
+ 
+ SELECT 'Employees' AS table_name, 8 AS number_of_attributes, COUNT(*) AS number_of_rows
+  FROM employees
+  
+ UNION ALL
+ 
+ SELECT 'Offices' AS table_name, 9 AS number_of_attributes, COUNT(*) AS number_of_rows
+  FROM offices;</sql><sql name="High Performance Products, Low Stock">-- In this query we compute products which yield the highest profit while being in low stock. This way, we find products which perform the best among other products and are being sold out more frequently than other products.
+WITH
+low_stock_table AS(
+SELECT productCode, ROUND(SUM(quantityOrdered) * 1.0 / (SELECT quantityInStock
+                                                          FROM products AS p
+														 WHERE od.productCode = p.productCode), 2) AS low_stock
+  FROM orderdetails AS od
+ GROUP BY productCode
+ ORDER BY low_stock
+ LIMIT 10
+ )
+ 
+SELECT productCode, SUM(quantityOrdered * priceEach) AS product_performance
+  FROM orderdetails AS od
+ WHERE productCode IN (SELECT productCode
+                         FROM low_stock_table)
+ GROUP BY productCode
+ ORDER BY product_performance DESC;</sql><sql name="Profit per Customer">-- In this query we compute profit per each customer
+SELECT o.customerNumber, SUM(quantityOrdered * (priceEach - buyPrice)) AS profit_per_customer
+  FROM orders AS o
+  JOIN orderdetails AS od
+    ON o.orderNumber = od.orderNumber
+  JOIN products AS p
+    ON od.productCode = p.productCode
+ GROUP BY o.customerNumber
+ ORDER BY profit_per_customer DESC;</sql><sql name="Top 5 VIP customers">-- In this query we compute top 5 VIP customers, meaning the customers that bring the highest profits to our business
+WITH 
+profit_per_customer_table AS (
+SELECT o.customerNumber, SUM(quantityOrdered * (priceEach - buyPrice)) AS profit
+  FROM products AS p
+  JOIN orderdetails AS od
+    ON p.productCode = od.productCode
+  JOIN orders AS o
+    ON o.orderNumber = od.orderNumber
+ GROUP BY o.customerNumber
+)
+SELECT c.contactLastName, c.contactFirstName, c.city, c.country, ppc.profit
+  FROM customers AS c
+  JOIN profit_per_customer_table AS ppc
+    ON c.customerNumber = ppc.customerNumber
+ ORDER BY profit DESC
+ LIMIT 5;</sql><sql name="Top 5 Least Engaged customers">-- In this query we compute top 5 least engaged customers, meaning the customers that bring the lowest profits to our business
+WITH 
+profit_per_customer_table AS (
+SELECT o.customerNumber, SUM(quantityOrdered * (priceEach - buyPrice)) AS profit
+  FROM products AS p
+  JOIN orderdetails AS od
+    ON p.productCode = od.productCode
+  JOIN orders AS o
+    ON o.orderNumber = od.orderNumber
+ GROUP BY o.customerNumber
+)
+SELECT c.contactLastName, c.contactFirstName, c.city, c.country, ppc.profit
+  FROM customers AS c
+  JOIN profit_per_customer_table AS ppc
+    ON c.customerNumber = ppc.customerNumber
+ ORDER BY profit
+ LIMIT 5;</sql><sql name="Customer Lifetime Value (LTV)">-- In this query we compute the customer lifetime value, meaning the average profit that an average customer brings to our business. This will help us determine how much we need to spend on marketing activities.
+WITH 
+profit_per_customer_table AS (
+SELECT o.customerNumber, SUM(quantityOrdered * (priceEach - buyPrice)) AS profit
+  FROM products AS p
+  JOIN orderdetails AS od
+    ON p.productCode = od.productCode
+  JOIN orders AS o
+    ON o.orderNumber = od.orderNumber
+ GROUP BY o.customerNumber
+)
+SELECT AVG(profit) AS avg_profit
+  FROM profit_per_customer_table AS ppc;</sql><current_tab id="6"/></tab_sql></sqlb_project>
